@@ -1,21 +1,3 @@
-# wcNATS - RPC client created based on [NATS go client](https://github.com/nats-io/nats.go)
-
-The client allows you to create weak connectivity between objects, but just as efficiently and quickly perform calls and
-notifications
-
-## Installation
-
-```bash
-# Go client
-go get github.com/LRichi/wcNATS/
-
-# Server
-go get github.com/nats-io/nats-server
-```
-
-## Basic Usage Request
-
-```go
 package main
 
 import (
@@ -111,6 +93,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-```
-
-## Or see [tests](https://github.com/LRichi/wcNATS/blob/main/tests/rpc_test.go) examples
