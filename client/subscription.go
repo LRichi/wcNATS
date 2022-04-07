@@ -26,9 +26,9 @@ func (s *subscription) GetSubject() string {
 
 // notify - implements the subscriber's notify
 func (s *subscription) notify(values []reflect.Value) []reflect.Value {
-	if err := validateCallValues(s.process, values); err != nil {
-		s.log.Fatalw("invalid request", "subject", s.Subscription.Subject,
-			"handle", s.response.Type(), "reason", err,
+	if s.process.Type().In(1).String() != values[2].FieldByName("Request").Type().String() {
+		s.log.Debugw("wrong notify model", "subject", s.Subscription.Subject,
+			"wait", s.process.Type().In(1), "got", values[2].Type().String(),
 		)
 	}
 
@@ -44,9 +44,9 @@ func (s *subscription) notify(values []reflect.Value) []reflect.Value {
 
 // call - implements the subscriber's call and the response to the client who created the call
 func (s *subscription) call(values []reflect.Value) []reflect.Value {
-	if err := validateCallValues(s.process, values); err != nil {
-		s.log.Fatalw("invalid request", "subject", s.Subscription.Subject,
-			"handle", s.response.Type(), "reason", err,
+	if s.process.Type().In(1).String() != values[2].FieldByName("Request").Type().String() {
+		s.log.Debugw("wrong calling model", "subject", s.Subscription.Subject,
+			"wait", s.process.Type().In(1), "got", values[2].Type().String(),
 		)
 	}
 
@@ -57,7 +57,8 @@ func (s *subscription) call(values []reflect.Value) []reflect.Value {
 		err            error
 	)
 	defer func() {
-		s.log.Debug(ctx, "Call", "subject", s.Subscription.Subject, "elapsed", time.Since(start).Seconds(),
+		s.log.Debugw("Call",
+			"subject", s.Subscription.Subject, "elapsed", time.Since(start).Seconds(),
 			"request", values[2].Field(1).Interface(), "response", responseValues[0].Interface(),
 			"error", responseValues[1].Interface(), "reply error", err,
 		)
@@ -89,7 +90,9 @@ func (s *subscription) call(values []reflect.Value) []reflect.Value {
 		},
 	)
 
-	err = respVal[0].Interface().(error)
+	if !respVal[0].IsZero() {
+		err = respVal[0].Interface().(error)
+	}
 
 	return nil
 }

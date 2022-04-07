@@ -109,18 +109,3 @@ func validateHandleOfNotify(handle interface{}) error {
 
 	return nil
 }
-
-func validateCallValues(process reflect.Value, request []reflect.Value) (err error) {
-	err = fmt.Errorf("process is wait %s, got request %s", process, request)
-	if process.Type().NumIn() != len(request) {
-		return
-	}
-
-	for i := range request {
-		if process.Type().In(i) != request[i].Type() {
-			return
-		}
-	}
-
-	return nil
-}
