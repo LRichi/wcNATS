@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"go.uber.org/zap"
 )
@@ -19,6 +20,7 @@ type Response struct {
 }
 
 type right struct {
+	wg  *sync.WaitGroup
 	log *zap.SugaredLogger
 }
 
@@ -35,12 +37,16 @@ func (r *right) receiveCall(ctx context.Context, req *Request) (*Response, error
 }
 
 func (r *right) receiveNotify(ctx context.Context, req *Request) error {
+	defer r.wg.Done()
+
 	var caller = []string{"service", ctx.Value("service").(string), "session", ctx.Value("method").(string)}
 	r.log.Infow("received notify",
 		"session", ctx.Value("session"), "caller", strings.Join(caller, "."), "request", req)
 
 	// if use return error, search in NATS client debug
-	//return fmt.Errorf("test error")
+	if req.Message == "" {
+		return fmt.Errorf("no message")
+	}
 
 	return nil
 }

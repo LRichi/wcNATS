@@ -73,7 +73,7 @@ func isRequestHandle(handle interface{}) (bool, error) {
 	case t.NumIn() == 2 && t.NumOut() == 2:
 		return true, nil
 	case t.NumIn() == 2 && t.NumOut() == 1:
-		return true, nil
+		return false, nil
 	default:
 		return false, fmt.Errorf("unable to determine subscription type, use %s or %s", gotFuncCallDesc, gotFuncNotifyDesc)
 	}

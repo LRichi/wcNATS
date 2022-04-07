@@ -32,12 +32,24 @@ func (s *subscription) notify(values []reflect.Value) []reflect.Value {
 		)
 	}
 
-	start := time.Now()
-	responseValues := s.process.Call([]reflect.Value{values[2]})
-	s.log.Debugw("Notify", "elapsed", time.Since(start).Seconds(),
-		"subject", s.Subscription.Subject,
-		"request", values[2].Interface(), "error", responseValues[1].Interface(),
+	var (
+		start          = time.Now()
+		responseValues []reflect.Value
+		ctx            = createSession(values[2].FieldByName("Session").Interface().(SessionDTO))
+		err            error
 	)
+	defer func() {
+		s.log.Debugw("Notify", "elapsed", time.Since(start).Seconds(),
+			"subject", s.Subscription.Subject,
+			"request", values[2].Interface(), "error", err,
+		)
+	}()
+
+	// calling the subscriber
+	responseValues = s.process.Call([]reflect.Value{reflect.ValueOf(ctx), values[2].FieldByName("Request")})
+	if !responseValues[0].IsZero() {
+		err = responseValues[0].Interface().(error)
+	}
 
 	return nil
 }

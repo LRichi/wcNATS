@@ -67,7 +67,7 @@ func (c *Client) Request(ctx context.Context, subject string, request, response 
 // Publish - for notify subscribers
 //
 // use handle: func(context.Context,*struct)error
-func (c *Client) Publish(ctx context.Context, subject fmt.Stringer, value interface{}) (err error) {
+func (c *Client) Publish(ctx context.Context, subject string, value interface{}) (err error) {
 	var start = time.Now()
 	defer func() {
 		c.log.Debugw("Publish", "subject", subject, "elapsed", time.Since(start).Seconds(),
@@ -84,7 +84,7 @@ func (c *Client) Publish(ctx context.Context, subject fmt.Stringer, value interf
 	reqDTO.FieldByName("Session").Set(reflect.ValueOf(getSession(ctx)))
 	reqDTO.FieldByName("Request").Set(reflect.ValueOf(value))
 
-	return c.conn.publish(subject.String(), reqDTO.Interface())
+	return c.conn.publish(subject, reqDTO.Interface())
 }
 
 // Subscribe - subscribe handle for remote call or notify
@@ -93,7 +93,6 @@ func (c *Client) Publish(ctx context.Context, subject fmt.Stringer, value interf
 //	for rpc:    func(context.Context,*struct)(*struct,error)
 //	for notify: func(context.Context,*struct)(error)
 func (c *Client) Subscribe(subject string, handle interface{}) (Subscription, error) {
-
 	var (
 		start = time.Now()
 		err   error
