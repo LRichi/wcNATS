@@ -1,8 +1,9 @@
-package nats
+package client
 
 import (
 	"context"
 	"fmt"
+	"github.com/nats-io/nats.go"
 	"reflect"
 	"time"
 
@@ -16,9 +17,9 @@ type Client struct {
 
 // Subscribe - subscribe handle for remote call or notify
 //
-// use:
-// for rpc:    func(context.Context,*struct)(*struct,error)
-// fpr notify: func(context.Context,*struct)(error)
+// use handle:
+//	for rpc:    func(context.Context,*struct)(*struct,error)
+//	for notify: func(context.Context,*struct)(error)
 func (c *Client) Subscribe(subject fmt.Stringer, handle interface{}) (Subscription, error) {
 	var (
 		start = time.Now()
@@ -70,7 +71,7 @@ func (c *Client) Subscribe(subject fmt.Stringer, handle interface{}) (Subscripti
 
 // Request - a remote procedure call is created
 //
-// use: func(context.Context,*struct)(*struct,error)
+// use handle: func(context.Context,*struct)(*struct,error)
 func (c *Client) Request(ctx context.Context, subject string, request, response interface{}) (err error) {
 	start := time.Now()
 	defer func() {
@@ -113,4 +114,35 @@ func (c *Client) Request(ctx context.Context, subject string, request, response 
 	}
 
 	return nil
+}
+
+// Publish - for notify subscribers
+//
+// use handle: func(context.Context,*struct)error
+func (c *Client) Publish(ctx context.Context, subject fmt.Stringer, value interface{}) (err error) {
+	var start = time.Now()
+	defer func() {
+		c.log.Debugw("Publish", "subject", subject, "elapsed", time.Since(start).Seconds(),
+			"value", value, "error", err,
+		)
+	}()
+
+	if err = validateModel(value); err != nil {
+		return fmt.Errorf("invalid value: %w", err)
+	}
+
+	// create a DTO in memory
+	var reqDTO = newRequestDTO(reflect.TypeOf(value))
+	reqDTO.FieldByName("Session").Set(reflect.ValueOf(getSession(ctx)))
+	reqDTO.FieldByName("Request").Set(reflect.ValueOf(value))
+
+	return c.conn.publish(subject.String(), reqDTO.Interface())
+}
+
+// New - return new 'NATS' client for rpc and broadcast notifications
+func New(url, name string, maxReconnects int) *Client {
+	return &Client{
+		conn: newConn(url, nats.JSON_ENCODER, name, maxReconnects),
+		log:  nil,
+	}
 }

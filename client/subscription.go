@@ -1,4 +1,4 @@
-package nats
+package client
 
 import (
 	"reflect"
@@ -27,7 +27,9 @@ func (s *subscription) GetSubject() string {
 // notify - implements the subscriber's notify
 func (s *subscription) notify(values []reflect.Value) []reflect.Value {
 	if err := validateCallValues(s.process, values); err != nil {
-		s.log.Fatalw("invalid request", "reason", err)
+		s.log.Fatalw("invalid request", "subject", s.Subscription.Subject,
+			"handle", s.response.Type(), "reason", err,
+		)
 	}
 
 	start := time.Now()
