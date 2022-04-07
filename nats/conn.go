@@ -16,7 +16,8 @@ type conn struct {
 	maxRecon int
 }
 
-func (c *conn) close() {
+// Close - closes connection
+func (c *conn) Close() {
 	c.mux.Lock()
 	if c.conn == nil {
 		c.mux.Unlock()
@@ -71,7 +72,8 @@ func (c *conn) connect() error {
 	return err
 }
 
-func newConnect(url, encType, name string, maxReconnects int) *conn {
+// newConn - creates connector for auto connecting
+func newConn(url, encType, name string, maxReconnects int) *conn {
 	return &conn{
 		url:      url,
 		encType:  encType,
