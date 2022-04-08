@@ -24,7 +24,11 @@ type ErrorDTO struct {
 }
 
 func (e ErrorDTO) Error() string {
-	return fmt.Sprintf("%s", e.Message)
+	if e.Message == nil {
+		panic("is nil")
+	}
+
+	return fmt.Sprintf("%s", *e.Message)
 }
 
 // newRequestDTO - creates a transport data structure in memory to receive a request
